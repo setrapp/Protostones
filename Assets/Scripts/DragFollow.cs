@@ -4,7 +4,11 @@ using System.Collections;
 public class DragFollow : MonoBehaviour {
 	public bool clickToFollow = false;
 	public bool followingMouse = false;
-	public float moveSpeed;
+	public SimpleMover mover;
+
+	void Start() {
+		mover = GetComponent<SimpleMover>();
+	}
 
 	void Update() {
 		//--- Follow when mouse is down anywhere ---//
@@ -42,7 +46,7 @@ public class DragFollow : MonoBehaviour {
 		float toMouseMag = toMouse.magnitude;
 		if (toMouseMag > 0) {
 			toMouse /= toMouseMag;
-			float moveDist = moveSpeed * Time.deltaTime;
+			float moveDist = mover.moveSpeed * Time.deltaTime;
 			if (moveDist > toMouseMag) {
 				moveDist = toMouseMag;
 			} 

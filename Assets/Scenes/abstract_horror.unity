@@ -86,6 +86,7 @@ GameObject:
   - 135: {fileID: 98501353}
   - 23: {fileID: 98501352}
   - 114: {fileID: 98501351}
+  - 114: {fileID: 98501356}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -106,7 +107,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   clickToFollow: 1
   followingMouse: 0
-  moveSpeed: 5
+  mover: {fileID: 0}
 --- !u!23 &98501352
 Renderer:
   m_ObjectHideFlags: 0
@@ -158,6 +159,18 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
+--- !u!114 &98501356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 98501350}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5aa6985370ce2f408b7297078443956, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 5
 --- !u!1 &804342283
 GameObject:
   m_ObjectHideFlags: 0
@@ -171,6 +184,7 @@ GameObject:
   - 23: {fileID: 804342285}
   - 114: {fileID: 804342284}
   - 114: {fileID: 804342289}
+  - 114: {fileID: 804342290}
   m_Layer: 0
   m_Name: Light Iron
   m_TagString: Untagged
@@ -189,13 +203,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3c49343552b8c64dba7d68b502d5214, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  leader: {fileID: 98501350}
-  moveSpeed: 3
+  leader: {fileID: 98501356}
   followRadius: .75
   followTriggerDistance: 2
   followLeash: 1.5
   distanceWhenFound: 0
   followState: 0
+  mover: {fileID: 0}
 --- !u!23 &804342285
 Renderer:
   m_ObjectHideFlags: 0
@@ -260,6 +274,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   clickToFollow: 1
   followingMouse: 0
+  mover: {fileID: 0}
+--- !u!114 &804342290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 804342283}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5aa6985370ce2f408b7297078443956, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   moveSpeed: 3
 --- !u!1 &1738702513
 GameObject:

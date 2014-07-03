@@ -2,8 +2,7 @@
 using System.Collections;
 
 public class ObjectFollow : MonoBehaviour {
-	public GameObject leader;
-	public float moveSpeed;
+	public SimpleMover leader;
 	public float followRadius;
 	public float followTriggerDistance;
 	public float followLeash;
@@ -16,9 +15,11 @@ public class ObjectFollow : MonoBehaviour {
 		Following
 	};
 	public FollowState followState;
+	public SimpleMover mover;
 
 	void Start() {
 		dragFollow = GetComponent<DragFollow>();
+		mover = GetComponent<SimpleMover>();
 	}
 
 	void Update() {
@@ -54,8 +55,6 @@ public class ObjectFollow : MonoBehaviour {
 		}
 	}
 
-	/*TODO when constraining to leash actually move the follower at the speed of the leader (will require knowing the leader's speed)*/
-
 	private void MoveToObject(float leashLength) {
 		// Target leader position to follow.
 		Vector3 targetPos = leader.transform.position;
@@ -68,16 +67,15 @@ public class ObjectFollow : MonoBehaviour {
 			targetPos = targetPos - (toTarget * followRadius);
 			toTargetMag = (targetPos - transform.position).magnitude;
 
+			float moveDist = mover.moveSpeed * Time.deltaTime;
 			if (toTargetMag > leashLength) {
-				transform.position = leader.transform.position - (toTarget * followLeash);
-			} else {
-				float moveDist = moveSpeed * Time.deltaTime;
-				if (moveDist > toTargetMag) {
-					moveDist = toTargetMag;
-				}
-				toTarget = toTarget * moveDist;
-				transform.position += toTarget;
+				moveDist = leader.moveSpeed * Time.deltaTime;
 			}
+			if (moveDist > toTargetMag) {
+				moveDist = toTargetMag;
+			}
+			toTarget = toTarget * moveDist;
+			transform.position += toTarget;
 		}
 	}
 }
