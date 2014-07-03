@@ -40,11 +40,14 @@ public class DragFollow : MonoBehaviour {
 
 		Vector3 toMouse = (mousePos - transform.position);
 		float toMouseMag = toMouse.magnitude;
-		float moveDist = moveSpeed * Time.deltaTime;
-		if (moveDist > toMouseMag) {
-			moveDist = toMouseMag;
-		} 
-		toMouse = toMouse * moveDist;
-		transform.position += toMouse;
+		if (toMouseMag > 0) {
+			toMouse /= toMouseMag;
+			float moveDist = moveSpeed * Time.deltaTime;
+			if (moveDist > toMouseMag) {
+				moveDist = toMouseMag;
+			} 
+			toMouse = toMouse * moveDist;
+			transform.position += toMouse;
+		}
 	}
 }
