@@ -3,7 +3,7 @@ using System.Collections;
 
 public class DragFollow : MonoBehaviour {
 	public bool clickToFollow = false;
-	private bool followingMouse = false;
+	public bool followingMouse = false;
 	public float moveSpeed;
 
 	void Update() {

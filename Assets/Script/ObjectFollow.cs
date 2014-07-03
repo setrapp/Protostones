@@ -7,25 +7,36 @@ public class ObjectFollow : MonoBehaviour {
 	public float followRadius;
 	public float followTriggerDistance;
 	public float followLeash;
+	private DragFollow dragFollow;
 	public enum FollowState {
 		Waiting = 0,
 		Following
 	};
 	public FollowState followState;
 
-	void Update() {
-		float toLeaderSqrDist = (transform.position - leader.transform.position).sqrMagnitude;
-		if ((followState == FollowState.Waiting && toLeaderSqrDist <= followTriggerDistance * followTriggerDistance) ||
-		    (followState == FollowState.Following && toLeaderSqrDist >= followRadius * followRadius))
-		{
-			if (followState == FollowState.Waiting) {
-				followState = FollowState.Following;
-			}
-			MoveToObject();
-		}
+	void Start() {
+		dragFollow = GetComponent<DragFollow>();
 	}
 
-	private void MoveToObject() {
+	void Update() {
+		if (!dragFollow || !dragFollow.followingMouse) {
+			float toLeaderSqrDist = (transform.position - leader.transform.position).sqrMagnitude;
+
+			if (
+			if ((followState == FollowState.Waiting && toLeaderSqrDist <= followTriggerDistance * followTriggerDistance) ||
+			    (followState == FollowState.Following && toLeaderSqrDist >= followRadius * followRadius))
+			{
+				if (followState == FollowState.Waiting) {
+					followState = FollowState.Following;
+				}
+				MoveToObject();
+			}
+		}
+	}
+	
+	// TODO Leash the drag and only allow it when following, probably don't need th the leashed bool in Move to object
+
+	private void MoveToObject(bool leashed = true) {
 		Vector3 targetPos = leader.transform.position;
 		targetPos.z = transform.position.z;
 		
