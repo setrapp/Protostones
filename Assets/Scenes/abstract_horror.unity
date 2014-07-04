@@ -215,6 +215,14 @@ Prefab:
       propertyPath: beads.Array.data[1]
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 11400000, guid: 404c473fb1398964da1e878ba10f02b8, type: 2}
+      propertyPath: potentialSpreadCount
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 11400000, guid: 404c473fb1398964da1e878ba10f02b8, type: 2}
+      propertyPath: spreadCount
+      value: 5
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 404c473fb1398964da1e878ba10f02b8, type: 2}
   m_RootGameObject: {fileID: 1132392729}
@@ -464,12 +472,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   beadPrefab: {fileID: 100000, guid: 6996d60c9550d3d419bac8e074162b2e, type: 2}
+  seed: 0
   neighborDistance: .5
   spreading: 1
   spreadDelay: .300000012
   lastSpreadTime: -1
-  potentialSpreadCount: 1
-  spreadCount: 1
+  potentialSpreadCount: 30
+  spreadCount: 5
   prey: {fileID: 98501350}
 --- !u!1001 &1341640721
 Prefab:
