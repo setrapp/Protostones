@@ -217,11 +217,23 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: 404c473fb1398964da1e878ba10f02b8, type: 2}
       propertyPath: potentialSpreadCount
-      value: 30
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 11400000, guid: 404c473fb1398964da1e878ba10f02b8, type: 2}
       propertyPath: spreadCount
-      value: 5
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 11400000, guid: 404c473fb1398964da1e878ba10f02b8, type: 2}
+      propertyPath: initialSpreadCount
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 11400000, guid: 404c473fb1398964da1e878ba10f02b8, type: 2}
+      propertyPath: seed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11400000, guid: 404c473fb1398964da1e878ba10f02b8, type: 2}
+      propertyPath: spreadDelay
+      value: .150000006
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 404c473fb1398964da1e878ba10f02b8, type: 2}
@@ -472,13 +484,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   beadPrefab: {fileID: 100000, guid: 6996d60c9550d3d419bac8e074162b2e, type: 2}
-  seed: 0
+  seed: 1
   neighborDistance: .5
   spreading: 1
-  spreadDelay: .300000012
+  initialSpreadCount: 100
+  spreadDelay: .150000006
   lastSpreadTime: -1
-  potentialSpreadCount: 30
-  spreadCount: 5
+  potentialSpreadCount: 50
+  spreadCount: 10
   prey: {fileID: 98501350}
 --- !u!1001 &1341640721
 Prefab:

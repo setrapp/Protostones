@@ -9,9 +9,9 @@ public class Spreader : MonoBehaviour {
 	private System.Random random;
 	private Vector3[] neighborDirections;
 	public float neighborDistance;
-	private float diagNeighborDistance;
 	private float neighborEpsilon;
 	public bool spreading = true;
+	public int initialSpreadCount = 0;
 	public float spreadDelay;
 	public float lastSpreadTime = - 1;
 	public int potentialSpreadCount = 1;
@@ -25,9 +25,6 @@ public class Spreader : MonoBehaviour {
 		random = new System.Random(seed);
 
 		neighborEpsilon = neighborDistance / 1000.0f;
-
-		/*TODO Use diagonal distance for creating and finding neighbors*/
-		diagNeighborDistance = Mathf.Sqrt(neighborDistance * 2);
 
 		neighborDirections = new Vector3[8];
 		neighborDirections[0] = Vector3.up;
@@ -51,6 +48,10 @@ public class Spreader : MonoBehaviour {
 			beads[i].spreader = this;
 			FindNeighbors(beads[i]);
 		}
+
+		for (int i = 0; i < initialSpreadCount; i++) {
+			Wander();
+		}
 	}
 
 	void Update() {
@@ -64,11 +65,13 @@ public class Spreader : MonoBehaviour {
 			return;
 		}
 
+		/*TODO Only seek prey withing range, probably put nearest bead calculation here.*/
 		SeekPrey();
+		//Wander();
 	}
 
 	private void SeekPrey() {
-		/*TODO Distribute processing time over spread delay*/
+		/*TODO Distribute processing time over spread delay. Possible with moving character?*/
 
 		int beadCount = beads.Count;
 		List<SpreadBead> potentialBeads = new List<SpreadBead>();
@@ -110,9 +113,9 @@ public class Spreader : MonoBehaviour {
 
 		for (int i = 0; i < spreadingBeads.Count; i++) {
 			int bestNeighborIndex = -1;
-			Vector3 bestNeighborPosition;
+			Vector3 bestNeighborPosition = Vector3.zero;
 			float minPreySqrDist = (prey.transform.position - spreadingBeads[i].transform.position).sqrMagnitude;
-			for (int j = 0; j < neighborDirections.Length; /*j++*/j+=2) {
+			for (int j = 0; j < neighborDirections.Length; j++) {
 				if (spreadingBeads[i].GetNeighbor(j) == null) {
 					Vector3 neighborPosition = spreadingBeads[i].transform.position + (neighborDirections[j] * neighborDistance);
 					float preySqrDist = (prey.transform.position - neighborPosition).sqrMagnitude;
@@ -125,12 +128,23 @@ public class Spreader : MonoBehaviour {
 			}
 
 			if (bestNeighborIndex >= 0) {
-				SpreadBead newBead = ((GameObject)GameObject.Instantiate(beadPrefab, bestNeighborPosition, Quaternion.identity)).GetComponent<SpreadBead>();
-				beads.Add(newBead);
-				newBead.spreader = this;
-				newBead.transform.parent = transform;
-				ConnectNeighbor(spreadingBeads[i], newBead, bestNeighborIndex, false);
-				lastSpreadTime = Time.time;
+				CreateBead(bestNeighborPosition, spreadingBeads[i], bestNeighborIndex, false);
+			}
+		}
+	}
+
+	private void Wander() {
+		/*TODO Maybe use a more sophisticated wander than just random*/
+		/*TODO Likely want to give higher precedence to outer limbs to avoid clumping*/
+		for (int i = 0; i < spreadCount; i++) {
+			SpreadBead spreadingBead = beads[random.Next(0, beads.Count)];
+			int spreadingDir = random.Next(0, neighborDirections.Length);
+
+			// If the chose bead has an empty neighbor in the chose direction, than create a bead.
+			// Actually creating the max number (or any) beads is not guaranteed, problem?
+			if (spreadingBead.neighbors[spreadingDir] == null) {
+				Vector3 neighborPosition = spreadingBead.transform.position + (neighborDirections[spreadingDir] * neighborDistance);
+				CreateBead(neighborPosition, spreadingBead, spreadingDir, false);
 			}
 		}
 	}
@@ -150,13 +164,14 @@ public class Spreader : MonoBehaviour {
 					Vector3 toNeighbor = beads[i].transform.position - bead.transform.position;
 					float bestToDotDir = Vector3.Dot(toNeighbor, neighborDirections[0]);
 					int bestDirIndex = 0;
-					for (int j = 1; j < neighborDirections.Length; /*j++*/j+=2) {
+					for (int j = 1; j < neighborDirections.Length; j++) {
 						float toDotDir = Vector3.Dot(toNeighbor, neighborDirections[j]);
 						if (toDotDir > bestToDotDir) {
 							bestToDotDir = toDotDir;
 							bestDirIndex = j;
 						}
 					}
+
 					ConnectNeighbor(bead, beads[i], bestDirIndex, false);
 				}
 			}
@@ -177,5 +192,17 @@ public class Spreader : MonoBehaviour {
 		bead.SetNeighbor(neighborIndex, neighbor);
 		neighbor.SetNeighbor(inverseNeighborIndex, bead);
 		return true;
+	}
+
+	private void CreateBead(Vector3 newPosition, SpreadBead spreadNeighor = null, int fromDirectionIndex = 0, bool overwriteNeighbors = false) {
+		SpreadBead newBead = ((GameObject)GameObject.Instantiate(beadPrefab, newPosition, Quaternion.identity)).GetComponent<SpreadBead>();
+		beads.Add(newBead);
+		newBead.spreader = this;
+		newBead.transform.parent = transform;
+		if (spreadNeighor != null) {
+			ConnectNeighbor(spreadNeighor, newBead, fromDirectionIndex, overwriteNeighbors);
+		}
+		FindNeighbors(newBead);
+		lastSpreadTime = Time.time;
 	}
 }
