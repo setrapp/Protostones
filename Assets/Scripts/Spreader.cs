@@ -23,6 +23,9 @@ public class Spreader : MonoBehaviour {
 	public float preyingDistance;
 	public float damageDistance;
 	public int damage;
+	public GameObject spatialAudioContainer;
+	public AudioSource stepAudioPlayer;
+	public AudioSource drainAudioPlayer;
 	//public float preySpeedMultiplier;
 
 	void Start() {
@@ -108,6 +111,8 @@ public class Spreader : MonoBehaviour {
 				toPreyDir /= toPreyDist;
 			}
 
+			spatialAudioContainer.transform.position = preyingBead.transform.position;
+
 			if (toPreyDist < preyingDistance) {
 				preying = true;
 			}
@@ -120,8 +125,12 @@ public class Spreader : MonoBehaviour {
 			// Damage the prey or spread on timer.
 			if (damaging && (damageDelay < 0 || Time.time - lastDamageTime >= damageDelay)) {
 				prey.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
+				//drainAudioPlayer.Play();
 				lastDamageTime = Time.time;
 			} else if (!frozenOnStart && (spreadDelay < 0 || Time.time - lastSpreadTime >= spreadDelay)) {
+				//if (!damaging) {
+					stepAudioPlayer.Play();
+				//}
 				Spread(preying);
 				lastSpreadTime = Time.time;
 			}
@@ -135,6 +144,7 @@ public class Spreader : MonoBehaviour {
 
 		if (preying) {
 			SeekPrey();
+
 		} else {
 			//Wander();
 		}

@@ -14,7 +14,7 @@ public class LightHealth : MonoBehaviour {
 	public float postDamageDelay;
 	public float lastRecoverTime;
 	public float lastDamageTime;
-	public float mobileRecover;
+	public float mobileDamage;
 	public float stillRecover;
 	public float stillThreshold;
 
@@ -32,7 +32,8 @@ public class LightHealth : MonoBehaviour {
 			if (mover.currentSpeed / mover.maxSpeed <= stillThreshold) {
 				RecoverDamage(stillRecover);
 			} else {
-				RecoverDamage(mobileRecover);
+				/*TODO If damage should be taken from moving for too long, this should be separated from healing*/
+				TakeDamage(mobileDamage);
 			}
 		}
 	}
