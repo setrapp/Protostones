@@ -20,9 +20,12 @@ public class ObjectFollow : MonoBehaviour {
 	void Start() {
 		dragFollow = GetComponent<DragFollow>();
 		mover = GetComponent<SimpleMover>();
+		mover.moving = false;
 	}
 
 	void Update() {
+		mover.moving = false;
+
 		// Only attempt to follow leader if not busy following something else.
 		if (followState != FollowState.Busy && dragFollow && dragFollow.followingMouse) {
 			followState = FollowState.Busy;
@@ -67,15 +70,15 @@ public class ObjectFollow : MonoBehaviour {
 			targetPos = targetPos - (toTarget * followRadius);
 			toTargetMag = (targetPos - transform.position).magnitude;
 
-			float moveDist = mover.moveSpeed * Time.deltaTime;
+			float moveDist = mover.maxSpeed;
 			if (toTargetMag > leashLength) {
-				moveDist = leader.moveSpeed * Time.deltaTime;
+				moveDist = leader.currentSpeed;
 			}
 			if (moveDist > toTargetMag) {
 				moveDist = toTargetMag;
 			}
-			toTarget = toTarget * moveDist;
-			transform.position += toTarget;
+			mover.Move(toTarget, moveDist, false);
 		}
+		mover.moving = true;
 	}
 }

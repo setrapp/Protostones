@@ -10,13 +10,20 @@ public class Spreader : MonoBehaviour {
 	private Vector3[] neighborDirections;
 	public float neighborDistance;
 	private float neighborEpsilon;
-	public bool spreading = true;
-	public int initialSpreadCount = 0;
+	public bool frozenOnStart = false;
+	private List<SpreaderFakePrey> onStartSpreadPrey;
+	public int onStartWanderCount = 0;
 	public float spreadDelay;
 	public float lastSpreadTime = - 1;
+	public float damageDelay;
+	public float lastDamageTime = - 1;
 	public int potentialSpreadCount = 1;
 	public int spreadCount = 1;
 	public GameObject prey;
+	public float preyingDistance;
+	public float damageDistance;
+	public int damage;
+	//public float preySpeedMultiplier;
 
 	void Start() {
 		if (seed <= 0) {
@@ -37,10 +44,14 @@ public class Spreader : MonoBehaviour {
 		neighborDirections[7] = (Vector3.up - Vector3.right).normalized;
 
 		beads = new List<SpreadBead>();
+		onStartSpreadPrey = new List<SpreaderFakePrey>();
 		for (int i = 0; i < transform.childCount; i++) {
 			SpreadBead childBead = transform.GetChild(i).GetComponent<SpreadBead>();
+			SpreaderFakePrey childPrey = transform.GetChild(i).GetComponent<SpreaderFakePrey>();
 			if (childBead != null) {
 				beads.Add(childBead);
+			} else if (childPrey) {
+				onStartSpreadPrey.Add(childPrey);
 			}
 		}
 
@@ -49,57 +60,91 @@ public class Spreader : MonoBehaviour {
 			FindNeighbors(beads[i]);
 		}
 
-		for (int i = 0; i < initialSpreadCount; i++) {
+		for (int i = 0; i < onStartWanderCount; i++) {
 			Wander();
+		}
+
+		GameObject actualPrey = prey;
+		int actualPotentialSpreadCount = potentialSpreadCount;
+		int actualSpreadCount = spreadCount;
+		for(int i = 0; i < onStartSpreadPrey.Count; i++) {
+			prey = onStartSpreadPrey[i].gameObject;
+			potentialSpreadCount = onStartSpreadPrey[i].potentialSpreadCount;
+			if (potentialSpreadCount <= 0) {
+				potentialSpreadCount = actualPotentialSpreadCount;
+			}
+			spreadCount = onStartSpreadPrey[i].potentialSpreadCount;
+			if (spreadCount <= 0) {
+				spreadCount = actualSpreadCount;
+			}
+			SpreadBead preyingBead;
+			do {
+				SeekPrey(onStartSpreadPrey[i].freezeBeadsTo, true);
+				preyingBead = FindBeadNearPrey(false, true);
+			} while ((prey.transform.position - preyingBead.transform.position).sqrMagnitude > damageDistance * damageDistance);
+		}
+		prey = actualPrey;
+		potentialSpreadCount = actualPotentialSpreadCount;
+		spreadCount = actualSpreadCount;
+
+
+		if (frozenOnStart) {
+			for (int i = 0; i < beads.Count; i++) {
+				beads[i].Frozen = true;
+			}
 		}
 	}
 
 	void Update() {
-		if (spreading && (spreadDelay < 0 || Time.time - lastSpreadTime >= spreadDelay)) {
-			Spread();
+		bool preying = false;
+		bool damaging = false;
+
+		// Determine nearest proximity to player.
+		SpreadBead preyingBead = FindBeadNearPrey(true);
+		if (preyingBead != null) {
+			Vector3 toPreyDir = prey.transform.position - preyingBead.transform.position;
+			float toPreyDist = toPreyDir.magnitude;
+			if (toPreyDist > 0) {
+				toPreyDir /= toPreyDist;
+			}
+
+			if (toPreyDist < preyingDistance) {
+				preying = true;
+			}
+
+			// Detect if touching player.
+			if (toPreyDist < damageDistance) {
+				damaging = true;
+			}
+
+			// Damage the prey or spread on timer.
+			if (damaging && (damageDelay < 0 || Time.time - lastDamageTime >= damageDelay)) {
+				prey.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
+				lastDamageTime = Time.time;
+			} else if (!frozenOnStart && (spreadDelay < 0 || Time.time - lastSpreadTime >= spreadDelay)) {
+				Spread(preying);
+				lastSpreadTime = Time.time;
+			}
 		}
 	}
 
-	private void Spread() {
+	private void Spread(bool preying) {
 		if (beads.Count < 1) {
 			return;
 		}
 
-		/*TODO Only seek prey withing range, probably put nearest bead calculation here.*/
-		SeekPrey();
-		//Wander();
+		if (preying) {
+			SeekPrey();
+		} else {
+			//Wander();
+		}
 	}
 
-	private void SeekPrey() {
+	private void SeekPrey(bool spawnFrozen = false, bool searchFrozen = false) {
 		/*TODO Distribute processing time over spread delay. Possible with moving character?*/
 
-		int beadCount = beads.Count;
-		List<SpreadBead> potentialBeads = new List<SpreadBead>();
-		List<float> potentialSqrDists = new List<float>();
+		List<SpreadBead> potentialBeads = FindBeadsNearPrey(potentialSpreadCount, false, searchFrozen);
 		List<SpreadBead> spreadingBeads = new List<SpreadBead>();
-
-		potentialBeads.Add(beads[0]);
-		potentialSqrDists.Add((prey.transform.position - beads[0].transform.position).sqrMagnitude);
-		for (int i = 1; i < beadCount; i++) {
-			if (!beads[i].NeighborLocked) {
-				float preySqrDist = (prey.transform.position - beads[i].transform.position).sqrMagnitude;
-				if (preySqrDist < potentialSqrDists[potentialSqrDists.Count - 1]) {
-					for (int j = potentialBeads.Count - 1; j >= 0; j--) {
-						if (preySqrDist < potentialSqrDists[j]) {
-							potentialBeads.Insert(j, beads[i]);
-							potentialSqrDists.Insert(j, preySqrDist);
-							if (potentialBeads.Count > potentialSpreadCount) {
-								potentialBeads.RemoveAt(potentialBeads.Count - 1);
-								potentialSqrDists.RemoveAt(potentialSqrDists.Count - 1);
-							}
-						}
-					}
-				} else if (potentialBeads.Count < potentialSpreadCount) {
-					potentialBeads.Add(beads[i]);
-					potentialSqrDists.Add(preySqrDist);
-				}
-			}
-		}
 
 		if (spreadCount >= potentialBeads.Count || spreadCount >= potentialSpreadCount) {
 			spreadingBeads = potentialBeads;
@@ -128,25 +173,66 @@ public class Spreader : MonoBehaviour {
 			}
 
 			if (bestNeighborIndex >= 0) {
-				CreateBead(bestNeighborPosition, spreadingBeads[i], bestNeighborIndex, false);
+				CreateBead(bestNeighborPosition, spawnFrozen, spreadingBeads[i], bestNeighborIndex, false);
 			}
 		}
 	}
 
-	private void Wander() {
+	private void Wander(bool spawnFrozen = false) {
 		/*TODO Maybe use a more sophisticated wander than just random*/
 		/*TODO Likely want to give higher precedence to outer limbs to avoid clumping*/
+		/*TODO Try looping through before to add to weight outcome*/
+		/*TODO What about just seeking random 'prey' for a number of steps?*/
 		for (int i = 0; i < spreadCount; i++) {
 			SpreadBead spreadingBead = beads[random.Next(0, beads.Count)];
 			int spreadingDir = random.Next(0, neighborDirections.Length);
 
 			// If the chose bead has an empty neighbor in the chose direction, than create a bead.
 			// Actually creating the max number (or any) beads is not guaranteed, problem?
-			if (spreadingBead.neighbors[spreadingDir] == null) {
+			if (spreadingBead.GetNeighbor(spreadingDir) == null) {
 				Vector3 neighborPosition = spreadingBead.transform.position + (neighborDirections[spreadingDir] * neighborDistance);
-				CreateBead(neighborPosition, spreadingBead, spreadingDir, false);
+				CreateBead(neighborPosition, spawnFrozen, spreadingBead, spreadingDir, false);
 			}
 		}
+	}
+
+	private SpreadBead FindBeadNearPrey(bool includeNeighborLocked = false, bool includeFrozen = false) {
+		SpreadBead nearestBead = null;
+		List<SpreadBead> nearBeads = FindBeadsNearPrey(1, includeNeighborLocked, includeFrozen);
+		if (nearBeads.Count > 0) {
+			nearestBead = nearBeads[0];
+		}
+		return nearestBead;
+	}
+
+	private List<SpreadBead> FindBeadsNearPrey(int count, bool includeNeighborLocked = false, bool includeFrozen = false) {
+		int beadCount = beads.Count;
+		List<SpreadBead> nearBeads = new List<SpreadBead>();
+		List<float> nearSqrDists = new List<float>();
+		for (int i = 0; i < beadCount; i++) {
+			if ((includeNeighborLocked || !beads[i].NeighborLocked) && (includeFrozen || !beads[i].Frozen)) {
+				float preySqrDist = (prey.transform.position - beads[i].transform.position).sqrMagnitude;
+				if (nearBeads.Count < 1) {
+					nearBeads.Add(beads[i]);
+					nearSqrDists.Add(preySqrDist);
+				} else if (preySqrDist < nearSqrDists[nearSqrDists.Count - 1]) {
+					for (int j = nearBeads.Count - 1; j >= 0; j--) {
+						if (preySqrDist < nearSqrDists[j]) {
+							nearBeads.Insert(j, beads[i]);
+							nearSqrDists.Insert(j, preySqrDist);
+							if (nearBeads.Count > count) {
+								nearBeads.RemoveAt(nearBeads.Count - 1);
+								nearSqrDists.RemoveAt(nearSqrDists.Count - 1);
+							}
+						}
+					}
+				} else if (nearBeads.Count < count) {
+					nearBeads.Add(beads[i]);
+					nearSqrDists.Add(preySqrDist);
+				}
+			}
+		}
+		return nearBeads;
 	}
 
 	private void FindNeighbors(SpreadBead bead) {
@@ -194,7 +280,7 @@ public class Spreader : MonoBehaviour {
 		return true;
 	}
 
-	private void CreateBead(Vector3 newPosition, SpreadBead spreadNeighor = null, int fromDirectionIndex = 0, bool overwriteNeighbors = false) {
+	private void CreateBead(Vector3 newPosition, bool spawnFrozen = false, SpreadBead spreadNeighor = null, int fromDirectionIndex = 0, bool overwriteNeighbors = false) {
 		SpreadBead newBead = ((GameObject)GameObject.Instantiate(beadPrefab, newPosition, Quaternion.identity)).GetComponent<SpreadBead>();
 		beads.Add(newBead);
 		newBead.spreader = this;
@@ -203,6 +289,8 @@ public class Spreader : MonoBehaviour {
 			ConnectNeighbor(spreadNeighor, newBead, fromDirectionIndex, overwriteNeighbors);
 		}
 		FindNeighbors(newBead);
-		lastSpreadTime = Time.time;
+		if(spawnFrozen) {
+			newBead.Frozen = true;
+		}
 	}
 }

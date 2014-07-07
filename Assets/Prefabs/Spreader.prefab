@@ -39,13 +39,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   beadPrefab: {fileID: 100000, guid: 6996d60c9550d3d419bac8e074162b2e, type: 2}
-  beads:
-  - {fileID: 0}
+  seed: 0
   neighborDistance: .5
+  frozenOnStart: 0
+  onStartWanderCount: 0
   spreadDelay: .300000012
   lastSpreadTime: -1
+  damageDelay: 0
+  lastDamageTime: -1
+  potentialSpreadCount: 1
+  spreadCount: 1
   prey: {fileID: 0}
-  lastSpreadBead: {fileID: 0}
+  preyingDistance: 0
+  damageDistance: 0
+  damage: 0
+  preySpeedMultiplier: .75
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

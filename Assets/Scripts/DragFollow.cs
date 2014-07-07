@@ -4,14 +4,19 @@ using System.Collections;
 public class DragFollow : MonoBehaviour {
 	public bool clickToFollow = false;
 	public bool followingMouse = false;
+	public float speedRampRadius;
 	public SimpleMover mover;
+	public float damageSlowDown; /*TODO Makes more sense connected to spreader*/
 
 	void Start() {
 		mover = GetComponent<SimpleMover>();
+		mover.moving = false;
 	}
 
 	void Update() {
-		//--- Follow when mouse is down anywhere ---//
+		mover.moving = false;
+
+		//Follow when mouse is down anywhere
 		if (!clickToFollow) {
 			if (Input.GetMouseButtonDown(0)) {
 				followingMouse = true;
@@ -23,9 +28,14 @@ public class DragFollow : MonoBehaviour {
 		if (followingMouse) {
 			MoveToMouse();
 		}
+		mover.externalMultiplier = 1;
 	}
 
-	//--- Follow when clicking object ---//
+	void TakeDamage() {
+		mover.externalMultiplier = damageSlowDown;
+	}
+
+	//Follow when clicking object
 	void OnMouseDown() {
 		if (clickToFollow) {
 			if (!followingMouse) {
@@ -46,12 +56,17 @@ public class DragFollow : MonoBehaviour {
 		float toMouseMag = toMouse.magnitude;
 		if (toMouseMag > 0) {
 			toMouse /= toMouseMag;
-			float moveDist = mover.moveSpeed * Time.deltaTime;
+			float speedRamp = 1;
+			if (speedRampRadius > 0) {
+				speedRamp = toMouseMag / speedRampRadius;
+			}
+			float moveDist = mover.maxSpeed * speedRamp;
 			if (moveDist > toMouseMag) {
 				moveDist = toMouseMag;
 			} 
-			toMouse = toMouse * moveDist;
-			transform.position += toMouse;
+			mover.Move(toMouse, moveDist, true);
 		}
+
+		mover.moving = true;
 	}
 }
