@@ -4,12 +4,15 @@ using System.Collections.Generic;
 
 public class TextDumper : MonoBehaviour {
 	public List<TextDump> dumps;
+	public List<TextDump> responses;
 	private List<TextDump> potentialDumps;
 	public List<DialogChoice> choices; 
 	private System.Random random;
 	public int seed;
 	private int guaranteedDumps;
 	public GUIText dumpDisplay;
+	public TextDumper partner;
+	public bool leading;
 
 	void Start() {
 		if (seed <= 0) {
@@ -17,23 +20,26 @@ public class TextDumper : MonoBehaviour {
 		}
 		random = new System.Random(seed);
 
-		potentialDumps = new List<TextDump>();
-		ResetPotentialDumps();
-
 		for (int i = 0; i < choices.Count; i++) {
 			choices[i].ChoiceIndex = i.ToString()[0];
 		}
 
-		guaranteedDumps = 1;
+		potentialDumps = new List<TextDump>();
+		ResetPotentialDumps();
+		if (leading) {
+			dumpDisplay.text = potentialDumps[0].text;
+		} else {
+			dumpDisplay.text = potentialDumps[1].text;
+		}
 		UpdateAllChoices();
 	}
 
-	private void UpdateChoice(int choiceIndex, int dumpIndex) {
+	public void UpdateChoice(int choiceIndex, int dumpIndex) {
 		choices[choiceIndex].Dump = potentialDumps[dumpIndex];
 		potentialDumps.RemoveAt(dumpIndex);
 	}
 
-	private void UpdateAllChoices() {
+	public void UpdateAllChoices() {
 		for (int i = 0; i < guaranteedDumps; i++) {
 			if (potentialDumps.Count > 0 && i < choices.Count) {
 				UpdateChoice(i, 0);
@@ -61,26 +67,67 @@ public class TextDumper : MonoBehaviour {
 		dumpDisplay.enabled = true;
 		dumpDisplay.text = dump.text;
 
-		ResetPotentialDumps();
+		if (dump.changesLead) {
+			if (leading) {
+				YieldLead();
+			} else {
+				TakeLead();
+			}
+		}
 
-		// TODO might not need to happen here
+		ResetPotentialDumps();
 		UpdateAllChoices();
 
 		return true;
 	}
 
-	private void ResetPotentialDumps() {
+	public void ResetPotentialDumps() {
 		potentialDumps.Clear();
-		for (int i = 0; i < dumps.Count; i++) {
-			if (dumps[i].isCommon) {
-				potentialDumps.Add(dumps[i]);
+		int guarantees = 0;
+
+		if (!leading) {
+			for (int i = 0; i < responses.Count; i++) {
+				if (responses[i].isCommon) {
+					potentialDumps.Add(responses[i]);
+					if (responses[i].isGuaranteed) {
+						guarantees++;
+					}
+				}
+			}
+
+		} else {
+			for (int i = 0; i < dumps.Count; i++) {
+				if (dumps[i].isCommon) {
+					potentialDumps.Add(dumps[i]);
+					if (dumps[i].isGuaranteed) {
+						guarantees++;
+					}
+				}
 			}
 		}
+
+		guaranteedDumps = guarantees;
+	}
+
+	public void YieldLead() {
+		leading = false;
+		partner.leading = true;
+		partner.ResetPotentialDumps();
+		partner.UpdateAllChoices();
+	}
+
+	public void TakeLead() {
+		leading = true;
+		partner.leading = false;
+		partner.ResetPotentialDumps();
+		partner.UpdateAllChoices();
 	}
 }
 
 [System.Serializable]
 public class TextDump {
 	public string text;
+	public bool changesLead;
 	public bool isCommon;
+	public bool isGuaranteed;
 }
