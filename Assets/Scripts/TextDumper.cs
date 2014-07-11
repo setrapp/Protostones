@@ -67,6 +67,8 @@ public class TextDumper : MonoBehaviour {
 		dumpDisplay.enabled = true;
 		dumpDisplay.text = dump.text;
 
+		partner.transform.parent.SendMessage("RespondToDump", dump, SendMessageOptions.DontRequireReceiver);
+
 		if (dump.changesLead) {
 			if (leading) {
 				YieldLead();
