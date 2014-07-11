@@ -4,14 +4,14 @@ using System.Collections.Generic;
 
 public class ChoiceInput : MonoBehaviour {
 	public TextDumper dumper;
-	public PartnerTimer timerFrom;
-	public PartnerTimer timerTo;
+	public PartnerTimer partnerTimer;
+	public PartnerTimer meTimer;
 
 	void Update () {
 		List<DialogChoice> choices = dumper.choices;
 		for (int i = 0; i < choices.Count; i++) {
 			if (choices[i].dumpDisplay.enabled && Input.GetKeyDown(choices[i].ChoiceIndex.ToString())) {
-				if (!timerTo.isActive) {
+				if (!partnerTimer.isActive) {
 					StartTimers();
 				}
 				dumper.DumpText(choices[i].Dump);
@@ -20,21 +20,16 @@ public class ChoiceInput : MonoBehaviour {
 		}
 
 		if (Input.GetKeyDown(KeyCode.Space)) {
-			if (!timerTo.isActive) {
+			if (!partnerTimer.isActive) {
 				StartTimers();
 			} else {
-				timerFrom.AddTime();
+				partnerTimer.AddTime();
 			}
-		}
-
-		// TODO this should be in ChoiceAI controlled by a formula like secondsLeft + secondElapsed < (liking * likingFactor) -> add time*/
-		if (Input.GetKeyDown(KeyCode.Home)) {
-			timerTo.AddTime();
 		}
 	}
 
 	private void StartTimers() {
-		timerTo.isActive = true;
-		timerFrom.isActive = true;
+		partnerTimer.isActive = true;
+		meTimer.isActive = true;
 	}
 }

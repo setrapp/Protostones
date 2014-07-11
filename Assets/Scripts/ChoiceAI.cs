@@ -10,8 +10,11 @@ public class ChoiceAI : MonoBehaviour {
 	public float liking;
 	public GUIText likingText;
 	public bool showLiking;
-	public GUIText timerText;
+	public PartnerTimer partnerTimer;
 	public bool showTimer;
+	public float emoteThreshold;
+	public float lastEmote;
+	private bool emoted;
 
 	void Start() {
 		if (seed <= 0) {
@@ -32,16 +35,37 @@ public class ChoiceAI : MonoBehaviour {
 
 
 		likingText.enabled = showLiking;
-		timerText.enabled = showTimer;
+		partnerTimer.timerText.enabled = showTimer;
+
+		lastEmote = liking;
+		emoted = false;
 	}
 
 	void Update() {
 		// TODO this should not be player controlled
-		if (Input.GetKeyDown(KeyCode.End)) {
+		if (Input.GetKeyDown(KeyCode.Home)) {
 			RandomDump();
 		}
 
-		likingText.text = liking.ToString ();
+		if (liking > 0.5f) {
+			int desiredSeconds = (int)(Mathf.Sqrt(((liking - 0.5f) * 2) + 1) * partnerTimer.maxSecondsLeft);
+			int projectedSeconds = partnerTimer.secondsElapsed + partnerTimer.secondsLeft;
+			if (desiredSeconds > projectedSeconds) {
+				partnerTimer.AddTime();
+			}
+		}
+
+		likingText.text = liking.ToString();
+
+		if (!emoted) {
+			emoted = true;
+			float likingChange = liking - lastEmote;
+			if (likingChange >= emoteThreshold) {
+				dumper.Emote(1);
+			} else if (likingChange <= -emoteThreshold) {
+				dumper.Emote(3);
+			}
+		}
 	}
 
 	private void RandomDump() {
@@ -57,13 +81,32 @@ public class ChoiceAI : MonoBehaviour {
 
 	void RespondToDump(TextDump dump) {
 		bool dumpFound = false;
+		emoted = false;
 		for (int i = 0; i < dumpAffinities.Count && !dumpFound; i++) {
 			if (dumpAffinities[i].dump == dump) {
 				dumpFound = true;
+				float deltaLiking = 0;
 				if (liking >= dumpAffinities[i].minToLike && liking <= dumpAffinities[i].maxToLike) {
 					liking += dumpAffinities[i].likeChange;
+					deltaLiking = dumpAffinities[i].likeChange;
 				} else if (liking >= dumpAffinities[i].minToDislike && liking <= dumpAffinities[i].maxToDislike) {
 					liking -= dumpAffinities[i].dislikeChange;
+					deltaLiking = -dumpAffinities[i].dislikeChange;
+				}
+
+				if (dumpAffinities[i].specialResponse) {
+					if (deltaLiking > 0) {
+						// ^o^
+						dumper.Emote(2);
+					} else if (deltaLiking < 0) {
+						// >_<
+						dumper.Emote(4);
+					} else {
+						// -_^
+						dumper.Emote(5);
+					}
+
+					emoted = true;
 				}
 			}
 		}
@@ -82,4 +125,5 @@ public class DumpAffinity {
 	public float minToDislike;
 	public float maxToDislike;
 	public float dislikeChange;
+	public bool specialResponse;
 }

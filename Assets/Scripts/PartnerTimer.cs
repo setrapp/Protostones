@@ -3,7 +3,8 @@ using System.Collections;
 
 public class PartnerTimer : MonoBehaviour {
 	public GUIText timerText;
-	private int secondsLeft;
+	[HideInInspector]
+	public int secondsLeft;
 	public int maxSecondsLeft;
 	public int secondsElapsed;
 	private float prevSecond = -1;

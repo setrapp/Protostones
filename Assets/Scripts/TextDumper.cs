@@ -124,6 +124,10 @@ public class TextDumper : MonoBehaviour {
 		partner.ResetPotentialDumps();
 		partner.UpdateAllChoices();
 	}
+
+	public void Emote(int emoteIndex) {
+		DumpText(responses[emoteIndex]);
+	}
 }
 
 [System.Serializable]
