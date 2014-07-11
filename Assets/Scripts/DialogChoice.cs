@@ -27,4 +27,16 @@ public class DialogChoice : MonoBehaviour {
 			}
 		}
 	}
+	public Color normalColor;
+	public Color eyeContactColor;
+
+	public void UseNormalColor() {
+		keyDisplay.color = normalColor;
+		dumpDisplay.color = normalColor;
+	}
+
+	public void UseEyeContactColor() {
+		keyDisplay.color = eyeContactColor;
+		dumpDisplay.color = eyeContactColor;
+	}
 }

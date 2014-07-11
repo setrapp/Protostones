@@ -6,6 +6,8 @@ public class ChoiceInput : MonoBehaviour {
 	public TextDumper dumper;
 	public PartnerTimer partnerTimer;
 	public PartnerTimer meTimer;
+	public EyeContact eyeContact;
+	private bool wasContacting;
 
 	void Update () {
 		List<DialogChoice> choices = dumper.choices;
@@ -24,6 +26,21 @@ public class ChoiceInput : MonoBehaviour {
 				StartTimers();
 			} else {
 				partnerTimer.AddTime();
+			}
+		}
+
+		if (partnerTimer.isActive) {
+			if (Input.GetMouseButtonDown(0)) {
+				eyeContact.Contacting = true;
+				dumper.eyeContact = true;
+				dumper.ColorAllChoices();
+				wasContacting = true;
+			}
+			if (!eyeContact.Contacting || (wasContacting && Input.GetMouseButtonUp(0))) {
+				eyeContact.Contacting = false;
+				dumper.eyeContact = false;
+				dumper.ColorAllChoices();
+				wasContacting = false;
 			}
 		}
 	}

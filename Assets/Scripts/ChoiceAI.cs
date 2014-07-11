@@ -15,6 +15,12 @@ public class ChoiceAI : MonoBehaviour {
 	public float emoteThreshold;
 	public float lastEmote;
 	private bool emoted;
+	public EyeContact eyeContact;
+	public float eyeContactBoost;
+	public float likingContactFactor;
+	public float likeEyeContactRate;
+	public float likeEyeContactGrowth;
+	public float boredDislikeRate;
 
 	void Start() {
 		if (seed <= 0) {
@@ -39,6 +45,7 @@ public class ChoiceAI : MonoBehaviour {
 
 		lastEmote = liking;
 		emoted = false;
+		eyeContact.maxScaling =  Mathf.Pow(liking, likingContactFactor);
 	}
 
 	void Update() {
@@ -52,6 +59,14 @@ public class ChoiceAI : MonoBehaviour {
 			int projectedSeconds = partnerTimer.secondsElapsed + partnerTimer.secondsLeft;
 			if (desiredSeconds > projectedSeconds) {
 				partnerTimer.AddTime();
+			}
+		}
+
+		if (partnerTimer.isActive) {
+			if (eyeContact.Contacting) {
+				liking += Mathf.Pow (liking, likeEyeContactGrowth) * likeEyeContactRate * Time.deltaTime;
+			} else {
+				liking -= boredDislikeRate * Time.deltaTime;
 			}
 		}
 
@@ -84,16 +99,22 @@ public class ChoiceAI : MonoBehaviour {
 		emoted = false;
 		for (int i = 0; i < dumpAffinities.Count && !dumpFound; i++) {
 			if (dumpAffinities[i].dump == dump) {
+				// Update liking.
 				dumpFound = true;
 				float deltaLiking = 0;
+				float likingFactor = 1;
+				if (eyeContact.Contacting && dump.eyeContactBoosted && !dump.eyeContactOnly) {
+					likingFactor = eyeContactBoost;
+				}
 				if (liking >= dumpAffinities[i].minToLike && liking <= dumpAffinities[i].maxToLike) {
-					liking += dumpAffinities[i].likeChange;
-					deltaLiking = dumpAffinities[i].likeChange;
+					liking += dumpAffinities[i].likeChange * likingFactor;
+					deltaLiking = dumpAffinities[i].likeChange * likingFactor;
 				} else if (liking >= dumpAffinities[i].minToDislike && liking <= dumpAffinities[i].maxToDislike) {
-					liking -= dumpAffinities[i].dislikeChange;
-					deltaLiking = -dumpAffinities[i].dislikeChange;
+					liking -= dumpAffinities[i].dislikeChange * likingFactor;
+					deltaLiking = -dumpAffinities[i].dislikeChange * likingFactor;
 				}
 
+				// Determine if special emote should be given as feedback.
 				if (dumpAffinities[i].specialResponse) {
 					if (deltaLiking > 0) {
 						// ^o^
@@ -108,6 +129,9 @@ public class ChoiceAI : MonoBehaviour {
 
 					emoted = true;
 				}
+
+				// Update eye contact stats.
+				eyeContact.maxScaling = Mathf.Pow(liking, likingContactFactor);
 			}
 		}
 

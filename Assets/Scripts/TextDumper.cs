@@ -13,6 +13,7 @@ public class TextDumper : MonoBehaviour {
 	public GUIText dumpDisplay;
 	public TextDumper partner;
 	public bool leading;
+	public bool eyeContact;
 
 	void Start() {
 		if (seed <= 0) {
@@ -55,6 +56,20 @@ public class TextDumper : MonoBehaviour {
 				UpdateChoice(i, dumpIndex);
 			} else {
 				choices[i].Dump = null;
+			}
+		}
+
+		ColorAllChoices();
+	}
+
+	public void ColorAllChoices() {
+		for (int i = 0; i < choices.Count; i++) {
+			if (!eyeContact || choices[i].Dump == null ||
+			    (!choices[i].Dump.eyeContactBoosted && !choices[i].Dump.eyeContactOnly))
+			{
+				choices[i].UseNormalColor();
+			} else {
+				choices[i].UseEyeContactColor();
 			}
 		}
 	}
@@ -136,4 +151,6 @@ public class TextDump {
 	public bool changesLead;
 	public bool isCommon;
 	public bool isGuaranteed;
+	public bool eyeContactBoosted;
+	public bool eyeContactOnly;
 }
