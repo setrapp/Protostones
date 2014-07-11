@@ -30,17 +30,25 @@ public class ChoiceAI : MonoBehaviour {
 		}
 		random = new System.Random(seed);
 
-		// Attach affinities to partners dumps.
+		// Attach affinities to partner's dumps.
 		List<TextDump> partnerDumps = dumper.partner.dumps;
 		List<TextDump> partnerResponses = dumper.partner.responses;
-		for (int i = 0; i < partnerDumps.Count; i++) {
-			dumpAffinities[i].dump = partnerDumps[i];
-		}
-		int startingIndex = partnerDumps.Count;
-		for (int i = startingIndex; i < partnerResponses.Count + startingIndex; i++) {
-			dumpAffinities[i].dump = partnerResponses[i - startingIndex];
-		}
+		for (int i = 0; i < dumpAffinities.Count; i++) {
+			bool dumpFound = false;
+			for (int j = 0; j < partnerDumps.Count && !dumpFound; j++) {
+				if (dumpAffinities[i].dumpName == partnerDumps[j].text) {
+					dumpAffinities[i].dump = partnerDumps[j];
+					dumpFound = true;
+				}
 
+			}
+			for (int j = 0; j < partnerResponses.Count && !dumpFound; j++) {
+				if (dumpAffinities[i].dumpName == partnerResponses[j].text) {
+					dumpAffinities[i].dump = partnerResponses[j];
+					dumpFound = true;
+				}
+			}
+		}
 
 		likingText.enabled = showLiking;
 		partnerTimer.timerText.enabled = showTimer;
@@ -154,8 +162,8 @@ public class ChoiceAI : MonoBehaviour {
 
 [System.Serializable]
 public class DumpAffinity {
+	public string dumpName;
 	public TextDump dump;
-	public string dumpName; // Just need to see name in editor
 	public float minToLike;
 	public float maxToLike;
 	public float likeChange;
