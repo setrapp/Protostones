@@ -17,6 +17,8 @@ public class ChoiceAI : MonoBehaviour {
 	private bool emoted;
 	public EyeContact eyeContact;
 	public float eyeContactBoost;
+	public float eyeContactBurnout;
+	private bool dislikedBurnout;
 	public float likingContactFactor;
 	public float likeEyeContactRate;
 	public float likeEyeContactGrowth;
@@ -46,12 +48,19 @@ public class ChoiceAI : MonoBehaviour {
 		lastEmote = liking;
 		emoted = false;
 		eyeContact.maxScaling =  Mathf.Pow(liking, likingContactFactor);
+		dislikedBurnout = false;
 	}
 
 	void Update() {
 		// TODO this should not be player controlled
 		if (Input.GetKeyDown(KeyCode.Home)) {
 			RandomDump();
+		}
+
+		if (liking > 1) {
+			liking = 1;
+		} else if (liking < 0) {
+			liking = 0;
 		}
 
 		if (liking > 0.5f) {
@@ -65,7 +74,11 @@ public class ChoiceAI : MonoBehaviour {
 		if (partnerTimer.isActive) {
 			if (eyeContact.Contacting) {
 				liking += Mathf.Pow (liking, likeEyeContactGrowth) * likeEyeContactRate * Time.deltaTime;
-			} else {
+				dislikedBurnout = false;
+			} else if (eyeContact.Exhausted && !dislikedBurnout) {
+				liking -= eyeContactBurnout;
+				dislikedBurnout = true;
+			} else if (liking > 0) {
 				liking -= boredDislikeRate * Time.deltaTime;
 			}
 		}

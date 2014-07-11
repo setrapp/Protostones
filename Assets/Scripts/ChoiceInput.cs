@@ -21,7 +21,7 @@ public class ChoiceInput : MonoBehaviour {
 			}
 		}
 
-		if (Input.GetKeyDown(KeyCode.Space)) {
+		if (Input.GetKeyDown(KeyCode.Tab)) {
 			if (!partnerTimer.isActive) {
 				StartTimers();
 			} else {
@@ -30,13 +30,13 @@ public class ChoiceInput : MonoBehaviour {
 		}
 
 		if (partnerTimer.isActive) {
-			if (Input.GetMouseButtonDown(0)) {
+			if (Input.GetKeyDown(KeyCode.Space)) {
 				eyeContact.Contacting = true;
 				dumper.eyeContact = true;
 				dumper.ColorAllChoices();
 				wasContacting = true;
 			}
-			if (!eyeContact.Contacting || (wasContacting && Input.GetMouseButtonUp(0))) {
+			if (!eyeContact.Contacting || (wasContacting && Input.GetKeyUp(KeyCode.Space))) {
 				eyeContact.Contacting = false;
 				dumper.eyeContact = false;
 				dumper.ColorAllChoices();

@@ -15,12 +15,13 @@ public class EyeContact : MonoBehaviour {
 			}
 		}
 	}
+	public float minScaling;
 	public float downScaleRate;
 	public float upScaleRate;
 	public float upScaleDelay;
 	private float lastDownScaleTime = -1;
 	public bool Exhausted {
-		get { return (scaling <= 0); }
+		get { return (scaling <= minScaling); }
 	}
 	private bool contacting;
 	public bool Contacting {
@@ -54,14 +55,14 @@ public class EyeContact : MonoBehaviour {
 
 		if (contacting) {
 			ScaleDown();
-		} else if (scaling < 1 && (lastDownScaleTime < 0 || Time.time - lastDownScaleTime > upScaleDelay)) {
+		} else if (scaling < maxScaling && (lastDownScaleTime < 0 || Time.time - lastDownScaleTime > upScaleDelay)) {
 			ScaleUp();
 		}
 
 		if (scaling > maxScaling) {
 			scaling = maxScaling;
- 		} else if (scaling < 0) {
-			scaling = 0;
+		} else if (scaling < minScaling) {
+			scaling = minScaling;
 			Contacting = false;
 		}
 
@@ -69,7 +70,7 @@ public class EyeContact : MonoBehaviour {
 	}
 
 	private void ScaleDown() {
-		if (scaling > 0) {
+		if (scaling > minScaling) {
 			scaling -= downScaleRate * Time.deltaTime;
 			lastDownScaleTime = Time.time;
 		}
