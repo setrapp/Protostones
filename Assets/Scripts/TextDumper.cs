@@ -26,7 +26,7 @@ public class TextDumper : MonoBehaviour {
 		}
 
 		potentialDumps = new List<TextDump>();
-		ResetPotentialDumps();
+		ResetPotentialDumps(true);
 		if (leading) {
 			dumpDisplay.text = potentialDumps[0].text;
 		} else {
@@ -98,13 +98,14 @@ public class TextDumper : MonoBehaviour {
 		return true;
 	}
 
-	public void ResetPotentialDumps() {
+	public void ResetPotentialDumps(bool greeting = false) {
 		potentialDumps.Clear();
 		int guarantees = 0;
 
 		if (!leading) {
 			for (int i = 0; i < responses.Count; i++) {
-				if (responses[i].isCommon) {
+				if (((!greeting && responses[i].isCommon) || (greeting && responses[i].isGreeting)) &&
+				    (eyeContact || !responses[i].eyeContactOnly)) {
 					potentialDumps.Add(responses[i]);
 					if (responses[i].isGuaranteed) {
 						guarantees++;
@@ -114,7 +115,8 @@ public class TextDumper : MonoBehaviour {
 
 		} else {
 			for (int i = 0; i < dumps.Count; i++) {
-				if (dumps[i].isCommon) {
+				if (((!greeting && dumps[i].isCommon) || (greeting && dumps[i].isGreeting)) &&
+					(eyeContact || !dumps[i].eyeContactOnly)) {
 					potentialDumps.Add(dumps[i]);
 					if (dumps[i].isGuaranteed) {
 						guarantees++;
@@ -150,6 +152,7 @@ public class TextDump {
 	public string text;
 	public bool changesLead;
 	public bool isCommon;
+	public bool isGreeting;
 	public bool isGuaranteed;
 	public bool eyeContactBoosted;
 	public bool eyeContactOnly;

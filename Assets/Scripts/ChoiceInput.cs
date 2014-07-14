@@ -29,6 +29,11 @@ public class ChoiceInput : MonoBehaviour {
 			}
 		}
 
+		if (Input.GetKeyDown(KeyCode.LeftShift)) {
+			dumper.ResetPotentialDumps();
+			dumper.UpdateAllChoices();
+		}
+
 		if (partnerTimer.isActive) {
 			if (Input.GetKeyDown(KeyCode.Space)) {
 				eyeContact.Contacting = true;

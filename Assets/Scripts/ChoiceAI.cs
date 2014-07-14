@@ -92,16 +92,6 @@ public class ChoiceAI : MonoBehaviour {
 		}
 
 		likingText.text = liking.ToString();
-
-		if (!emoted) {
-			emoted = true;
-			float likingChange = liking - lastEmote;
-			if (likingChange >= emoteThreshold) {
-				dumper.Emote(1);
-			} else if (likingChange <= -emoteThreshold) {
-				dumper.Emote(3);
-			}
-		}
 	}
 
 	private void RandomDump() {
@@ -127,28 +117,40 @@ public class ChoiceAI : MonoBehaviour {
 				if (eyeContact.Contacting && dump.eyeContactBoosted && !dump.eyeContactOnly) {
 					likingFactor = eyeContactBoost;
 				}
-				if (liking >= dumpAffinities[i].minToLike && liking <= dumpAffinities[i].maxToLike) {
+				bool canLike = (liking >= dumpAffinities[i].minToLike && liking <= dumpAffinities[i].maxToLike);
+				bool canDislike = (liking >= dumpAffinities[i].minToDislike && liking <= dumpAffinities[i].maxToDislike);
+				bool flipReaction = (random.NextDouble() < dumpAffinities[i].chanceToFlip);
+				if ((canLike && !flipReaction) || (canDislike && flipReaction)) {
 					liking += dumpAffinities[i].likeChange * likingFactor;
 					deltaLiking = dumpAffinities[i].likeChange * likingFactor;
-				} else if (liking >= dumpAffinities[i].minToDislike && liking <= dumpAffinities[i].maxToDislike) {
+				} else if ((canDislike && !flipReaction) || (canLike && flipReaction)) {
 					liking -= dumpAffinities[i].dislikeChange * likingFactor;
 					deltaLiking = -dumpAffinities[i].dislikeChange * likingFactor;
 				}
 
-				// Determine if special emote should be given as feedback.
-				if (dumpAffinities[i].specialResponse) {
-					if (deltaLiking > 0) {
-						// ^o^
-						dumper.Emote(2);
-					} else if (deltaLiking < 0) {
-						// >_<
-						dumper.Emote(4);
-					} else {
-						// -_^
-						dumper.Emote(5);
-					}
-
+				// Determine what emotion to show.
+				if (!emoted) {
 					emoted = true;
+					if (dumpAffinities[i].specialResponse) {
+						if (deltaLiking > 0) {
+							// ^o^
+							dumper.Emote(2);
+						} else if (deltaLiking < 0) {
+							// >_<
+							dumper.Emote(4);
+						} else {
+							// -_^
+							dumper.Emote(5);
+						}
+					} else {
+						if (deltaLiking > 0) {
+							// ^_^
+							dumper.Emote(1);
+						} else if (deltaLiking < 0) {
+							// -_-
+							dumper.Emote(3);
+						}
+					}
 				}
 
 				// Update eye contact stats.
@@ -163,6 +165,7 @@ public class ChoiceAI : MonoBehaviour {
 [System.Serializable]
 public class DumpAffinity {
 	public string dumpName;
+	[HideInInspector]
 	public TextDump dump;
 	public float minToLike;
 	public float maxToLike;
@@ -170,5 +173,6 @@ public class DumpAffinity {
 	public float minToDislike;
 	public float maxToDislike;
 	public float dislikeChange;
+	public float chanceToFlip;
 	public bool specialResponse;
 }
