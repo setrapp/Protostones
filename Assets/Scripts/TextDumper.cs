@@ -14,6 +14,7 @@ public class TextDumper : MonoBehaviour {
 	public TextDumper partner;
 	public bool leading;
 	public bool eyeContact;
+	public List<GameObject> emotePrefabs;
 
 	void Start() {
 		if (seed <= 0) {
@@ -129,21 +130,21 @@ public class TextDumper : MonoBehaviour {
 	}
 
 	public void YieldLead() {
-		leading = false;
+		/*leading = false;
 		partner.leading = true;
 		partner.ResetPotentialDumps();
-		partner.UpdateAllChoices();
+		partner.UpdateAllChoices();*/
 	}
 
 	public void TakeLead() {
-		leading = true;
+		/*leading = true;
 		partner.leading = false;
 		partner.ResetPotentialDumps();
-		partner.UpdateAllChoices();
+		partner.UpdateAllChoices();*/
 	}
 
 	public void Emote(int emoteIndex) {
-		DumpText(responses[emoteIndex]);
+		Instantiate(emotePrefabs[emoteIndex]);
 	}
 }
 

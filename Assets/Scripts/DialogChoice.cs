@@ -17,7 +17,7 @@ public class DialogChoice : MonoBehaviour {
 		get { return dump; }
 		set {
 			dump = value; 
-			if (dump == null || dump.text == null) {
+			if (!display || dump == null || dump.text == null) {
 				keyDisplay.enabled = false;
 				dumpDisplay.enabled = false;
 			} else {
@@ -29,6 +29,7 @@ public class DialogChoice : MonoBehaviour {
 	}
 	public Color normalColor;
 	public Color eyeContactColor;
+	public bool display = true;
 
 	public void UseNormalColor() {
 		keyDisplay.color = normalColor;
