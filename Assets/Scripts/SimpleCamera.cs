@@ -1,62 +1,79 @@
 using UnityEngine;
 using System.Collections;
 
-/// MouseLook rotates the transform based on the mouse delta.
-/// Minimum and Maximum values can be used to constrain the possible rotation
-
-/// To make an FPS style character:
-/// - Create a capsule.
-/// - Add the MouseLook script to the capsule.
-///   -> Set the mouse look to use LookX. (You want to only turn character but not tilt it)
-/// - Add FPSInputController script to the capsule
-///   -> A CharacterMotor and a CharacterController component will be automatically added.
-
-/// - Create a camera. Make the camera a child of the capsule. Reset it's transform.
-/// - Add a MouseLook script to the camera.
-///   -> Set the mouse look to use LookY. (You want the camera to tilt up and down like a head. The character already turns.)
 public class SimpleCamera : MonoBehaviour {
+	public Camera targetCamera;
+	public Transform lookAt;
+	public float deadZone;
+	public Vector3 mousePosition;
+	public Vector3 startMousePosition;
+	public Vector3 minLimits;
+	public Vector3 maxLimits;
+	public bool clampX;
+	public bool clampY;
+	public bool requireRMB;
+	public Vector3 sensitivity;
+	public float distanceSmooth;
 
-	public enum RotationAxes { MouseXAndY = 0, MouseX = 1, MouseY = 2 }
-	public RotationAxes axes = RotationAxes.MouseXAndY;
-	public float sensitivityX = 15F;
-	public float sensitivityY = 15F;
+	private float desiredDistance;
+	private float distanceVelocity;
 
-	public float minimumX = -360F;
-	public float maximumX = 360F;
 
-	public float minimumY = -60F;
-	public float maximumY = 60F;
-
-	float rotationY = 0F;
-
-	void Update ()
-	{
-		if (axes == RotationAxes.MouseXAndY)
-		{
-			float rotationX = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * sensitivityX;
-			
-			rotationY += Input.GetAxis("Mouse Y") * sensitivityY;
-			rotationY = Mathf.Clamp (rotationY, minimumY, maximumY);
-			
-			transform.localEulerAngles = new Vector3(-rotationY, rotationX, 0);
-		}
-		else if (axes == RotationAxes.MouseX)
-		{
-			transform.Rotate(0, Input.GetAxis("Mouse X") * sensitivityX, 0);
-		}
-		else
-		{
-			rotationY += Input.GetAxis("Mouse Y") * sensitivityY;
-			rotationY = Mathf.Clamp (rotationY, minimumY, maximumY);
-			
-			transform.localEulerAngles = new Vector3(-rotationY, transform.localEulerAngles.y, 0);
-		}
+	void Start() {
+		mousePosition.z = Mathf.Clamp (mousePosition.z, minLimits.z, maxLimits.z);
+		startMousePosition.z = mousePosition.z;
+		Reset();
 	}
-	
-	void Start ()
-	{
-		// Make the rigid body not change rotation
-		if (rigidbody)
-			rigidbody.freezeRotation = true;
+
+	void LateUpdate() {
+		if (lookAt == null) {
+			return;
+		}
+
+		HandlePlayerInput();
+		FindDesiredPosition();
+		UpdatePostion();
 	}
+
+	private void HandlePlayerInput() {
+		// Camera Look.
+		if (!requireRMB || Input.GetMouseButtonDown(1)) {
+			if (Mathf.Abs(Input.GetAxis("Mouse X")) > deadZone) {
+				mousePosition += Input.GetAxis("Mouse X") * sensitivity.x;
+				if (clampX) {
+					mousePosition.x = Helper.ClampAngle(mousePosition.x, minLimits.x, maxLimits.x);
+				}
+			}
+			if (Mathf.Abs(Input.GetAxis("Mouse Y")) > deadZone) {
+				mousePosition -= Input.GetAxis("Mouse Y") * sensitivity.x;
+				if (clampX) {
+					mousePosition.y = Helper.ClampAngle(mousePosition.y, minLimits.y, maxLimits.y);
+				}
+			}
+		}
+
+		// Camera Zoom.
+
+	}
+
+	private void FindDesiredPosition() {
+
+	}
+
+	private Vector3 CalculatePostion(float rotationX, float rotationY, float distance) {
+
+	}
+
+	private void UpdatePostion() {
+
+	}
+
+	public void Reset() {
+		mousePosition.x = startMousePosition.x;
+		mousePosition.y = startMousePosition.y;
+		mousePosition.z = startMousePosition.z;
+		desiredDistance = mousePosition.z;
+	}
+
+	private void 
 }
