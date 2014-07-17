@@ -3,23 +3,29 @@ using System.Collections;
 
 public class SimpleMotor : MonoBehaviour {
 	public float moveSpeed;
+	public float gravity;
 	public Vector3 movement;
 	private CharacterController controller;
+	private SimpleCamera cameraController;
 
 	void Start() {
 		controller = GetComponent<CharacterController>();
+		cameraController = GetComponent<SimpleCamera>();
 	}
 
 	public void UpdateMotor() {
-		//AlignWithCameraSnap();
+		if (cameraController) {
+			AlignWithCameraSnap();
+		}
 		ProcessMotion();
 	}
 
 	private void AlignWithCameraSnap() {
 		if (movement.sqrMagnitude > 0) 
 		{
-			Vector3 rotation = transform.rotation.eulerAngles;
-			rotation.y = Camera.main.transform.rotation.y;
+			Vector3 rotation = cameraController.targetCamera.transform.rotation.eulerAngles;
+			rotation.x = transform.rotation.eulerAngles.x;
+			rotation.z = transform.rotation.eulerAngles.z;
 			transform.rotation = Quaternion.Euler(rotation);
 		}
 	}
@@ -30,6 +36,9 @@ public class SimpleMotor : MonoBehaviour {
 			worldMovement.Normalize();
 		}
 		worldMovement *= moveSpeed * Time.deltaTime;
-		controller.Move (worldMovement);
+
+		worldMovement.y -= gravity * Time.deltaTime;
+
+		controller.Move(worldMovement);
 	}
 }
