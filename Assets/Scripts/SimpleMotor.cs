@@ -31,7 +31,10 @@ public class SimpleMotor : MonoBehaviour {
 	}
 
 	private void ProcessMotion() {
-		Vector3 worldMovement = transform.TransformDirection(movement);
+		Vector3 worldMovement = Vector3.zero;
+		if (movement.sqrMagnitude > 0) {
+			worldMovement = transform.TransformDirection(movement);
+		}
 		if (worldMovement.sqrMagnitude > 1) {
 			worldMovement.Normalize();
 		}
