@@ -6,7 +6,6 @@ public class EscortController : MonoBehaviour {
 	private SimpleMotor motor;
 	private HealthTracker health;
 	public List<GameObject> criticalPath;
-	public float criticalRange;
 	private int criticalIndex;
 	public List<GameObject> drainers;
 	public int drainerIndex;
@@ -14,6 +13,9 @@ public class EscortController : MonoBehaviour {
 	private int escorteeRefugeIndex;
 	public GameObject escortee;
 	private HealthTracker escorteeHealth;
+	public string escorteeInPositive;
+	public string escorteeInNegative;
+	private bool escorteeHealing = true;
 	public float choiceDelay;
 	private float lastChoice = -1;
 	private System.Random random;
@@ -21,6 +23,7 @@ public class EscortController : MonoBehaviour {
 	private Vector3 lastMove;
 	public float decisiveness = 1;
 	public float stubornness = 1;
+	public float seekProximity;
 
 	// Macro weights.
 	public float criticalWeight;
@@ -44,8 +47,8 @@ public class EscortController : MonoBehaviour {
 	public float retreatEscortWeight;
 
 	// Weight helpers.
-	public float elapsedTime;
-	public float maxTime;
+	public float timeSinceCheckpoint;
+	public float timePerCheckpoint;
 	public float minPrioritizeDistance;
 	public float maxPrioritizeDistance;
 
@@ -61,14 +64,14 @@ public class EscortController : MonoBehaviour {
 		motor = GetComponent<SimpleMotor>();
 		health = GetComponent<HealthTracker>();
 		escorteeHealth = escortee.GetComponent<HealthTracker>();
-		elapsedTime = 0;
+		timeSinceCheckpoint = 0;
 
 		//TODO Make separate list for refuges.
 		escorteeRefuges = criticalPath;
 	}
 
 	void Update() {
-		elapsedTime += Time.deltaTime;
+		timeSinceCheckpoint += Time.deltaTime;
 		motor.movement = lastMove * stubornness;
 
 		if (lastChoice < 0 || Time.time - lastChoice >= choiceDelay) {
@@ -96,7 +99,11 @@ public class EscortController : MonoBehaviour {
 		Vector3 protectMove = CalculateProtectDirection() * protectWeight;
 		Vector3 retreatMove = CalculateRetreatDirection() * retreatWeight;
 
-		motor.movement += criticalMove + drainMove + protectMove + retreatMove;
+		Vector3 newMove = criticalMove + drainMove + protectMove + retreatMove;
+		if (newMove.sqrMagnitude <= 0) {
+			motor.movement = Vector3.zero;
+		}
+		motor.movement += newMove;
 		lastMove = motor.movement.normalized;
 		motor.UpdateMotor();
 	}
@@ -104,17 +111,20 @@ public class EscortController : MonoBehaviour {
 	private void CalculateWeights() {
 		float distProporation = ((transform.position - escortee.transform.position).magnitude - minPrioritizeDistance) / (maxPrioritizeDistance - minPrioritizeDistance);
 		distProporation = Mathf.Clamp(distProporation, 0, 1);
-		float escorteeHealthFromOptimal = Mathf.Abs(escorteeHealth.Health - 0.5f) * 2;
+		float escorteeHealthFromOptimal = Mathf.Max(escorteeHealth.Health - 0.5f, 0) * 2;
+		if (!escorteeHealing) {
+			escorteeHealthFromOptimal = Mathf.Max(0.5f - escorteeHealth.Health, 0) * 2;
+		}
 		float healthAboveOptimal = Mathf.Max(health.Health - 0.5f, 0) * 2;
 
 		// Calculate importance of progressing along critical path.
-		criticalWeight = criticalBaseWeight + (((elapsedTime / maxTime) * criticalTimeWeight));
-		/*TODO are these calculations wrong, escort constanct healing is breaking everything.*/
+		criticalWeight = criticalBaseWeight * (((timeSinceCheckpoint / timePerCheckpoint) * criticalTimeWeight));
+
 		// Calculate importance of finding a drainer to restore condition.
-		drainWeight = drainBaseWeight * ((healthAboveOptimal * drainEscortWeight) + (escorteeHealthFromOptimal * drainEscorteeWeight)); 
+		drainWeight = drainBaseWeight * ((healthAboveOptimal * drainEscortWeight) - (escorteeHealthFromOptimal * drainEscorteeWeight)); 
 
 		// Calculate importance of protecting escortee.
-		protectWeight = protectBaseWeight * ((escorteeHealthFromOptimal * protectEscorteeWeight) - (healthAboveOptimal * protectEscortWeight) + (distProporation * protectDistanceWeight));
+		protectWeight = protectBaseWeight * Mathf.Max((escorteeHealthFromOptimal * protectEscorteeWeight) - (healthAboveOptimal * protectEscortWeight), (distProporation * protectDistanceWeight));
 
 		// Calculate importance of retreating to safety for escortee.
 		/*TODO might not need retreat*/
@@ -137,10 +147,19 @@ public class EscortController : MonoBehaviour {
 		}
 	}
 
+	private void ObjectToggled(string message) {
+		if (message == escorteeInPositive) {
+			escorteeHealing = true;
+		} else if (message == escorteeInNegative) {
+			escorteeHealing = false;
+		}
+	}
+
 	private Vector3 CalculateCriticalDirection() {
 		/*TODO Could probably do simple path following, or just check if object has moved beyond the half plane perpedicular to vector from last checkpoint to this one.*/
-		if (criticalIndex < criticalPath.Count && (criticalPath[criticalIndex].transform.position - transform.position).sqrMagnitude < criticalRange * criticalRange) {
+		if (criticalIndex < criticalPath.Count && (criticalPath[criticalIndex].transform.position - transform.position).sqrMagnitude < seekProximity * seekProximity) {
 			criticalIndex++;
+			timeSinceCheckpoint = 0;
 		}
 
 		Vector3 criticalDirection = Vector3.zero;
@@ -155,8 +174,9 @@ public class EscortController : MonoBehaviour {
 	}
 
 	private Vector3 CalculateDrainDirection() {
-		if (drainWeight > 0 && drainerIndex < 0) {
+		if (drainWeight > 0) {
 			float minSqrDist = 0;
+			drainerIndex = -1;
 			for (int i = 0; i < drainers.Count; i++) {
 				float sqrDist = (drainers[i].transform.position - transform.position).sqrMagnitude;
 				if (drainerIndex < 0 || sqrDist < minSqrDist) {
@@ -168,16 +188,29 @@ public class EscortController : MonoBehaviour {
 
 		Vector3 drainDirection = Vector3.zero;
 		if (drainerIndex >= 0) {
-			drainDirection = drainers[drainerIndex].transform.position - transform.position;
+			Vector3 drainerPos = drainers[drainerIndex].transform.position;
+			drainerPos.y = transform.position.y;
+			drainDirection = drainerPos - transform.position;
 			drainDirection.Normalize();
+			Vector3 nearDrainerPos = drainerPos - (drainDirection * seekProximity);
+			if (Vector3.Dot(drainDirection, nearDrainerPos - transform.position) <= 0) {
+				drainDirection = Vector3.zero;
+			}
 		}
 
 		return drainDirection;
 	}
 
 	private Vector3 CalculateProtectDirection() {
-		Vector3 protectDirection = escortee.transform.position - transform.position;
+		Vector3 protectDirection = Vector3.zero;
+		Vector3 escorteePos = escortee.transform.position;
+		escorteePos.y = transform.position.y;
+		protectDirection = escorteePos - transform.position;
 		protectDirection.Normalize();
+		Vector3 nearEscorteePos = escorteePos - (protectDirection * seekProximity);
+		if (Vector3.Dot(protectDirection, nearEscorteePos - transform.position) <= 0) {
+			protectDirection = Vector3.zero;
+		}
 		return protectDirection;
 	}
 
