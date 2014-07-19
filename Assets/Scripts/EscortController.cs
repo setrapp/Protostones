@@ -77,7 +77,18 @@ public class EscortController : MonoBehaviour {
 		if (lastChoice < 0 || Time.time - lastChoice >= choiceDelay) {
 			lastChoice = Time.time;
 			CalculateWeights();
-			float criticalChance = criticalWeight;
+			float[] weights = new float[] {criticalWeight, drainWeight, protectWeight, retreatWeight};
+			float maxWeight = Mathf.Max(weights);
+			if (criticalWeight == maxWeight) {
+				criticalWeight *= decisiveness;
+			}else if (drainWeight == maxWeight) {
+				drainWeight *= decisiveness;
+			}else if (protectWeight == maxWeight) {
+				protectWeight *= decisiveness;
+			}else if (retreatWeight == maxWeight) {
+				retreatWeight *= decisiveness;
+			}
+			/*float criticalChance = criticalWeight;
 			float drainChance = criticalChance + drainWeight;
 			float protectChance = drainChance + protectWeight;
 			float retreatChance = protectChance + retreatWeight;
@@ -90,7 +101,7 @@ public class EscortController : MonoBehaviour {
 				protectWeight *= decisiveness;
 			} else if (choice < retreatChance) {
 				retreatWeight *= decisiveness;
-			}
+			}*/
 			NormalizeWeights();
 		}
 
