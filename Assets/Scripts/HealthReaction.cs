@@ -42,19 +42,17 @@ public class HealthReaction : MonoBehaviour {
 	void FullHealth() {
 		fullHealth = true;
 		fading = true;
-		cameraFade.renderer.material.color = new Color(1, 1, 1, 0);
+		cameraFade.renderer.material.color = new Color(1, 1, 1, Mathf.Max(cameraFade.renderer.material.color.a, 0));
 	}
 
 	void EmptyHealth() {
 		emptyHealth = true;
 		fading = true;
-		cameraFade.renderer.material.color = new Color(0, 0, 0, 0);
+		cameraFade.renderer.material.color = new Color(0, 0, 0, Mathf.Max(cameraFade.renderer.material.color.a, 0));
 	}
 
 	void NormalHealth() {
-		// Unfade material
 		fullHealth = false;
 		emptyHealth = false;
-
 	}
 }
