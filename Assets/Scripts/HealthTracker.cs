@@ -40,6 +40,11 @@ public class HealthTracker : MonoBehaviour {
 			return;
 		}
 
+		bool wasExtreme = false;
+		if (health >= 1 || health <= 0) {
+			wasExtreme = true;
+		}
+
 		alteration *= alterMod;
 		health += alteration;
 		if (health >= 1) {
@@ -48,6 +53,8 @@ public class HealthTracker : MonoBehaviour {
 		} else if (health <= 0) {
 			health = 0;
 			SendMessage("EmptyHealth", SendMessageOptions.DontRequireReceiver);
+		} else if (wasExtreme) {
+			SendMessage("NormalHealth", SendMessageOptions.DontRequireReceiver);
 		}
 	}
 }

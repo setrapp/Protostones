@@ -16,6 +16,12 @@ public class EscortController : MonoBehaviour {
 	public string escorteeInPositive;
 	public string escorteeInNegative;
 	private bool escorteeHealing = true;
+	public float helpIncrement;
+	public float helpDecay;
+	public float annoyDecay;
+	private float helpWeight;
+	private float annoyWeight;
+	public float annoyThreshold;
 	public float choiceDelay;
 	private float lastChoice = -1;
 	private System.Random random;
@@ -51,6 +57,7 @@ public class EscortController : MonoBehaviour {
 	public float timePerCheckpoint;
 	public float minPrioritizeDistance;
 	public float maxPrioritizeDistance;
+	public float healthIgnoreThreshold;
 
 	void Start() {
 		if (seed <= 0) {
@@ -64,7 +71,8 @@ public class EscortController : MonoBehaviour {
 		motor = GetComponent<SimpleMotor>();
 		health = GetComponent<HealthTracker>();
 		escorteeHealth = escortee.GetComponent<HealthTracker>();
-		timeSinceCheckpoint = 0;
+		timeSinceCheckpoint = timePerCheckpoint;
+		helpWeight = 0;
 
 		//TODO Make separate list for refuges.
 		escorteeRefuges = criticalPath;
@@ -117,6 +125,18 @@ public class EscortController : MonoBehaviour {
 		motor.movement += newMove;
 		lastMove = motor.movement.normalized;
 		motor.UpdateMotor();
+
+		if (helpWeight > 0) {
+			helpWeight -= helpDecay * Time.deltaTime;
+		} else if (helpWeight < 0) {
+			helpWeight = 0;
+		}
+
+		if (annoyWeight > 0) {
+			annoyWeight -= annoyDecay * Time.deltaTime;
+		} else if (annoyWeight < 0) {
+			annoyWeight = 0;
+		}
 	}
 
 	private void CalculateWeights() {
@@ -126,16 +146,26 @@ public class EscortController : MonoBehaviour {
 		if (!escorteeHealing) {
 			escorteeHealthFromOptimal = Mathf.Max(0.5f - escorteeHealth.Health, 0) * 2;
 		}
+		if (escorteeHealthFromOptimal < healthIgnoreThreshold) {
+			escorteeHealthFromOptimal = 0;
+		}
 		float healthAboveOptimal = Mathf.Max(health.Health - 0.5f, 0) * 2;
+		if (healthAboveOptimal < healthIgnoreThreshold) {
+			healthAboveOptimal = 0;
+		}
+		float helpModulation = helpWeight;
+		if (annoyWeight >= annoyThreshold) {
+			helpModulation *= -1;
+		}
 
 		// Calculate importance of progressing along critical path.
-		criticalWeight = criticalBaseWeight * (((timeSinceCheckpoint / timePerCheckpoint) * criticalTimeWeight));
+		criticalWeight = criticalBaseWeight * ((Mathf.Min(timeSinceCheckpoint / timePerCheckpoint, 1) * criticalTimeWeight));
 
 		// Calculate importance of finding a drainer to restore condition.
 		drainWeight = drainBaseWeight * ((healthAboveOptimal * drainEscortWeight) - (escorteeHealthFromOptimal * drainEscorteeWeight)); 
 
 		// Calculate importance of protecting escortee.
-		protectWeight = protectBaseWeight * Mathf.Max((escorteeHealthFromOptimal * protectEscorteeWeight) - (healthAboveOptimal * protectEscortWeight), (distProporation * protectDistanceWeight));
+		protectWeight = protectBaseWeight * (helpModulation + Mathf.Max((escorteeHealthFromOptimal * protectEscorteeWeight) - (healthAboveOptimal * protectEscortWeight), (distProporation * protectDistanceWeight)));
 
 		// Calculate importance of retreating to safety for escortee.
 		/*TODO might not need retreat*/
@@ -164,6 +194,11 @@ public class EscortController : MonoBehaviour {
 		} else if (message == escorteeInNegative) {
 			escorteeHealing = false;
 		}
+	}
+
+	private void HelpEscortee() {
+		helpWeight += helpIncrement;
+		annoyWeight += helpIncrement;
 	}
 
 	private Vector3 CalculateCriticalDirection() {

@@ -30,7 +30,10 @@ public class HealthDrain : MonoBehaviour {
 	}
 
 	void Update() {
-		if ((!preferredDrain || !preferredDrain.drainActive) && (drainer.transform.position - drainee.transform.position).sqrMagnitude < maxDistance * maxDistance) {
+		Vector3 drainerPos = drainer.transform.position;
+		Vector3 draineePos = drainee.transform.position;
+		drainerPos.y = drainee.transform.position.y;
+		if ((!preferredDrain || !preferredDrain.drainActive) && (drainerPos - draineePos).sqrMagnitude < maxDistance * maxDistance) {
 			drainActive = true;
 			if (renderer != null) {
 				renderer.enabled = true;

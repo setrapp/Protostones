@@ -20,7 +20,9 @@ public class DrainerPull : MonoBehaviour {
 				}
 			}
 
-			Vector3 pull = drainers[closestDrainer].transform.position - target.transform.position;
+			Vector3 drainerPos = drainers[closestDrainer].transform.position;
+			drainerPos.y = target.transform.position.y;
+			Vector3 pull = drainerPos - target.transform.position;
 			pull = pull.normalized * pullSpeed * Time.deltaTime;
 			target.Move (pull);
 		}

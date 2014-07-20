@@ -39,6 +39,7 @@ public class SimpleMotor : MonoBehaviour {
 			worldMovement.Normalize();
 		}
 		worldMovement *= moveSpeed * Time.deltaTime;
+		worldMovement.y = 0;
 
 		worldMovement.y -= gravity * Time.deltaTime;
 
