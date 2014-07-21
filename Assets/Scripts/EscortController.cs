@@ -32,6 +32,7 @@ public class EscortController : MonoBehaviour {
 	public float seekProximity;
 	private Vector3 startPosition;
 	private Quaternion startRotation;
+	public GameObject babyDrainerPrefab;
 
 	// Macro weights.
 	public float criticalWeight;
@@ -210,6 +211,10 @@ public class EscortController : MonoBehaviour {
 	}
 
 	private void Reset() {
+		GameObject baby = (GameObject)GameObject.Instantiate(babyDrainerPrefab, transform.position, transform.rotation);
+		DrainerSetup babySetup = baby.GetComponent<DrainerSetup>();
+		babySetup.playerDrain.drainee = escortee;
+		babySetup.escortDrain.drainee = gameObject;
 		transform.position = startPosition;
 		transform.rotation = startRotation;
 		health.ResetHealth();
