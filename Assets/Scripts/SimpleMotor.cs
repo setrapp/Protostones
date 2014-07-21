@@ -3,6 +3,7 @@ using System.Collections;
 
 public class SimpleMotor : MonoBehaviour {
 	public float moveSpeed;
+	public float hopSpeed;
 	public float gravity;
 	public Vector3 movement;
 	private CharacterController controller;
@@ -44,5 +45,10 @@ public class SimpleMotor : MonoBehaviour {
 		worldMovement.y -= gravity * Time.deltaTime;
 
 		controller.Move(worldMovement);
+	}
+
+	public void Hop() {
+		Vector3 hop = Vector3.up * hopSpeed * Time.deltaTime;
+		controller.Move(hop);
 	}
 }
