@@ -30,6 +30,8 @@ public class EscortController : MonoBehaviour {
 	public float decisiveness = 1;
 	public float stubornness = 1;
 	public float seekProximity;
+	private Vector3 startPosition;
+	private Quaternion startRotation;
 
 	// Macro weights.
 	public float criticalWeight;
@@ -73,6 +75,8 @@ public class EscortController : MonoBehaviour {
 		escorteeHealth = escortee.GetComponent<HealthTracker>();
 		timeSinceCheckpoint = timePerCheckpoint;
 		helpWeight = 0;
+		startPosition = transform.position;
+		startRotation = transform.rotation;
 
 		//TODO Make separate list for refuges.
 		escorteeRefuges = criticalPath;
@@ -199,6 +203,16 @@ public class EscortController : MonoBehaviour {
 	private void HelpEscortee() {
 		helpWeight += helpIncrement;
 		annoyWeight += helpIncrement;
+	}
+
+	private void EmptyHealth() {
+		enabled = false;
+	}
+
+	private void Reset() {
+		transform.position = startPosition;
+		transform.rotation = startRotation;
+		health.ResetHealth();
 	}
 
 	private Vector3 CalculateCriticalDirection() {

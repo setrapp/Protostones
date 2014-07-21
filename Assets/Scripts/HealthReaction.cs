@@ -13,12 +13,17 @@ public class HealthReaction : MonoBehaviour {
 	private Material normalMaterial;
 	private bool fading;
 	public GameObject cameraFade;
+	public GameObject escort;
+	private Vector3 startPosition;
+	private Quaternion startRotation;
 
 	void Start() {
 		controller = GetComponent<CharacterController>();
 		tracker = GetComponent<HealthTracker>();
 		motor = GetComponent<SimpleMotor>();
 		normalMaterial = renderer.material;
+		startPosition = transform.position;
+		startRotation = transform.rotation;
 	}
 
 	void Update() {
@@ -37,6 +42,11 @@ public class HealthReaction : MonoBehaviour {
 				cameraFade.renderer.material.color -= new Color(0, 0, 0, fadeSpeed * Time.deltaTime);
 			}
 		}
+
+		if (fading && cameraFade.renderer.material.color.a >= 1.3) {
+			cameraFade.renderer.material.color -= new Color(0, 0, 0, cameraFade.renderer.material.color.a - 1);
+			Reset();
+		}
 	}
 
 	void FullHealth() {
@@ -52,6 +62,15 @@ public class HealthReaction : MonoBehaviour {
 	}
 
 	void NormalHealth() {
+		fullHealth = false;
+		emptyHealth = false;
+	}
+
+	private void Reset() {
+		escort.SendMessage("Reset", SendMessageOptions.DontRequireReceiver);
+		transform.position = startPosition;
+		transform.rotation = startRotation;
+		tracker.ResetHealth();
 		fullHealth = false;
 		emptyHealth = false;
 	}

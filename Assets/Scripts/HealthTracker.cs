@@ -14,7 +14,7 @@ public class HealthTracker : MonoBehaviour {
 	public GUIText textDisplay;
 
 	void Start() {
-		health = Mathf.Clamp(startHealth, 0, 1);
+		ResetHealth();
 		if (textDisplay && textDisplay.enabled) {
 			textDisplay.text = health.ToString();
 		}
@@ -56,5 +56,9 @@ public class HealthTracker : MonoBehaviour {
 		} else if (wasExtreme) {
 			SendMessage("NormalHealth", SendMessageOptions.DontRequireReceiver);
 		}
+	}
+
+	public void ResetHealth() {
+		health = Mathf.Clamp(startHealth, 0, 1);
 	}
 }
