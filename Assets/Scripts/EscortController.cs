@@ -154,9 +154,9 @@ public class EscortController : MonoBehaviour {
 		if (escorteeHealthFromOptimal < healthIgnoreThreshold) {
 			escorteeHealthFromOptimal = 0;
 		}
-		float healthAboveOptimal = Mathf.Max(health.Health - 0.5f, 0) * 2;
-		if (healthAboveOptimal < healthIgnoreThreshold) {
-			healthAboveOptimal = 0;
+		float healthBelowOptimal = Mathf.Max( 0.5f - health.Health, 0) * 2;
+		if (healthBelowOptimal < healthIgnoreThreshold) {
+			healthBelowOptimal = 0;
 		}
 		float helpModulation = helpWeight;
 		if (annoyWeight >= annoyThreshold) {
@@ -167,10 +167,10 @@ public class EscortController : MonoBehaviour {
 		criticalWeight = criticalBaseWeight * ((Mathf.Min(timeSinceCheckpoint / timePerCheckpoint, 1) * criticalTimeWeight));
 
 		// Calculate importance of finding a drainer to restore condition.
-		drainWeight = drainBaseWeight * ((healthAboveOptimal * drainEscortWeight) - (escorteeHealthFromOptimal * drainEscorteeWeight)); 
+		drainWeight = drainBaseWeight * ((healthBelowOptimal * drainEscortWeight) - (escorteeHealthFromOptimal * drainEscorteeWeight)); 
 
 		// Calculate importance of protecting escortee.
-		protectWeight = protectBaseWeight * (helpModulation + Mathf.Max((escorteeHealthFromOptimal * protectEscorteeWeight) - (healthAboveOptimal * protectEscortWeight), (distProporation * protectDistanceWeight)));
+		protectWeight = protectBaseWeight * (helpModulation + Mathf.Max((escorteeHealthFromOptimal * protectEscorteeWeight) - (healthBelowOptimal * protectEscortWeight), (distProporation * protectDistanceWeight)));
 
 		// Calculate importance of retreating to safety for escortee.
 		/*TODO might not need retreat*/
